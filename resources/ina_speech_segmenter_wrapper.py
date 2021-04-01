@@ -5,7 +5,7 @@ import json
 import os
 import subprocess
 
-from segmentation_schema import SegmentationSchema
+from segmentation import Segmentation
 from inaSpeechSegmenter import Segmenter
 
 def main():
@@ -29,36 +29,16 @@ def main():
 
 def convert_to_segmentation_schema(filename, segmentation):
     # Create a segmentation object to serialize
-    seg_schema = SegmentationSchema(filename)
+    seg_schema = Segmentation()
+    seg_schema.media.filename = filename
 
     # For each segment returned by the ina_speech_segmenter, add 
     # a corresponding segment formatted to json spec
     for segment in segmentation:
-        label = get_label(segment[0])
-        gender = get_gender(segment[0])
-        start = segment[1]
-        end = segment[2]
-        seg_schema.addSegment(label, gender, start, end)
+        seg_schema.addSegment(segment[0], segment[0], float(segment[1]), float(segment[2]))
 
     return seg_schema
 
-# Recode label values to {speech, music, silence}
-def get_label(value):
-    if value == "Male" or value == "Female":
-        return "speech"
-    elif value == "Music":
-        return "music"
-    elif value == "NOACTIVITY":
-        return "silence"
-
-    return value
-
-# Recode gender to {male, female, ""}
-def get_gender(value):
-    if value == "Male" or value == "Female":
-        return value.lower()
-
-    return ""
 
 # Serialize schema obj and write it to output file
 def write_output_json(seg_schema, json_file):
